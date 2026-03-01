@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package rumor.v1;
+
+option go_package = "github.com/jimschubert/rumor/gen/rumor/v1;rumorv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+// A basic CRUD service
+// google.protobuf.Struct is used here to have a "dynamic" type
+service RumorService {
+  rpc List(ListRequest) returns (ListResponse) {
+    option (google.api.http) = { get: "/api/{resource}" };
+  }
+  rpc Get(GetRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = { get: "/api/{resource}/{id}" };
+  }
+  rpc Create(CreateRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = { post: "/api/{resource}", body: "data" };
+  }
+  rpc Update(UpdateRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = { put: "/api/{resource}/{id}", body: "data" };
+  }
+  rpc Patch(PatchRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = { patch: "/api/{resource}/{id}", body: "data" };
+  }
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = { delete: "/api/{resource}/{id}" };
+  }
+}
+
+message ListRequest {
+  string resource  = 1;
+  map<string, string> filters = 2; // ?field=value pairs
+  int32  page      = 3;
+  int32  page_size = 4;
+}
+
+message ListResponse {
+  repeated google.protobuf.Struct items    = 1;
+  int32                           total    = 2;
+  int32                           page     = 3;
+  int32                           page_size = 4;
+}
+
+message GetRequest {
+  string resource = 1;
+  string id       = 2;
+}
+
+message CreateRequest {
+  string                resource = 1;
+  google.protobuf.Struct data    = 2;
+}
+
+message UpdateRequest {
+  string                resource = 1;
+  string                id       = 2;
+  google.protobuf.Struct data    = 3;
+}
+
+message PatchRequest {
+  string                resource = 1;
+  string                id       = 2;
+  google.protobuf.Struct data    = 3;
+}
+
+message DeleteRequest {
+  string resource = 1;
+  string id       = 2;
+}
+
+message DeleteResponse {
+  bool   success = 1;
+  string message = 2;
+}
