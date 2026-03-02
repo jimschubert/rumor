@@ -168,7 +168,7 @@ func (s *JSONStore) Delete(resource, id string) error {
 	return fmt.Errorf("%s/%s not found", resource, id)
 }
 
-// load reads the data representation from teh file system
+// load reads the data representation from the file system
 func (s *JSONStore) load() error {
 	raw, err := s.fs.ReadFile(s.filePath)
 	if os.IsNotExist(err) {

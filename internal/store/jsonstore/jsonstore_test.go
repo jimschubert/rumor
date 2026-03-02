@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jimschubert/rumor/internal/store"
+	"github.com/stretchr/testify/assert"
 )
 
 // MockFileSystem implements FileSystem for testing without actual file operations
@@ -48,12 +49,8 @@ func TestNew(t *testing.T) {
 		mock := newMockFS()
 		s, err := NewWithFS("test.json", mock)
 
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if s == nil {
-			t.Fatalf("expected non-nil store")
-		}
+		assert.NoError(t, err, "unexpected error")
+		assert.NotNil(t, s, "expected non-nil store")
 	})
 
 	t.Run("loads existing data from file", func(t *testing.T) {
@@ -72,18 +69,11 @@ func TestNew(t *testing.T) {
 		mock.files["test.json"] = raw
 
 		s, err := NewWithFS("test.json", mock)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 
-		// Verify data was loaded by attempting to retrieve the record
 		rec, err := s.Get("users", "1")
-		if err != nil {
-			t.Fatalf("failed to get record: %v", err)
-		}
-		if rec["name"] != "Alice" {
-			t.Errorf("expected name=Alice, got %v", rec["name"])
-		}
+		assert.NoError(t, err, "failed to get record")
+		assert.Equal(t, "Alice", rec["name"], "expected name=Alice")
 	})
 
 	t.Run("handles corrupted JSON in file", func(t *testing.T) {
@@ -91,9 +81,7 @@ func TestNew(t *testing.T) {
 		mock.files["test.json"] = []byte("invalid json")
 
 		_, err := NewWithFS("test.json", mock)
-		if err == nil {
-			t.Errorf("expected error for corrupted JSON")
-		}
+		assert.Error(t, err, "expected error for corrupted JSON")
 	})
 }
 
@@ -139,23 +127,15 @@ func TestCreate(t *testing.T) {
 			s, _ := NewWithFS("test.json", mock)
 
 			result, err := s.Create(tt.resource, tt.data)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			assert.NoError(t, err, "unexpected error")
 
-			if result["id"] != tt.expectID {
-				t.Errorf("expected id=%d, got %v", tt.expectID, result["id"])
-			}
+			assert.Equal(t, tt.expectID, result["id"], "expected id=%d", tt.expectID)
 
 			for key, expectedVal := range tt.expectFields {
-				if result[key] != expectedVal {
-					t.Errorf("expected %s=%v, got %v", key, expectedVal, result[key])
-				}
+				assert.Equal(t, expectedVal, result[key], "expected %s=%v", key, expectedVal)
 			}
 
-			if _, ok := result["createdAt"]; !ok {
-				t.Errorf("expected createdAt field to be set")
-			}
+			assert.NotNil(t, result["createdAt"], "expected createdAt field to be set")
 		})
 	}
 
@@ -167,15 +147,9 @@ func TestCreate(t *testing.T) {
 		user2, _ := s.Create("users", store.Record{"name": "Bob"})
 		user3, _ := s.Create("users", store.Record{"name": "Charlie"})
 
-		if user1["id"] != int64(1) {
-			t.Errorf("expected user1 id=1, got %v", user1["id"])
-		}
-		if user2["id"] != int64(2) {
-			t.Errorf("expected user2 id=2, got %v", user2["id"])
-		}
-		if user3["id"] != int64(3) {
-			t.Errorf("expected user3 id=3, got %v", user3["id"])
-		}
+		assert.Equal(t, int64(1), user1["id"], "expected user1 id=1")
+		assert.Equal(t, int64(2), user2["id"], "expected user2 id=2")
+		assert.Equal(t, int64(3), user3["id"], "expected user3 id=3")
 	})
 }
 
@@ -240,18 +214,12 @@ func TestGet(t *testing.T) {
 			result, err := s.Get(tt.resource, tt.recordID)
 
 			if tt.expectFound {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
+				assert.NoError(t, err, "unexpected error")
 				for key, expectedVal := range tt.expectFields {
-					if result[key] != expectedVal {
-						t.Errorf("expected %s=%v, got %v", key, expectedVal, result[key])
-					}
+					assert.Equal(t, expectedVal, result[key], "expected %s=%v", key, expectedVal)
 				}
 			} else {
-				if err == nil {
-					t.Errorf("expected error, but got nil")
-				}
+				assert.Error(t, err, "expected error")
 			}
 		})
 	}
@@ -362,25 +330,13 @@ func TestList(t *testing.T) {
 
 			results, total, err := s.List(tt.resource, tt.filters, tt.page, tt.pageSize)
 
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if len(results) != tt.expectCount {
-				t.Errorf("expected %d results, got %d", tt.expectCount, len(results))
-			}
-
-			if total != tt.expectTotal {
-				t.Errorf("expected total=%d, got %d", tt.expectTotal, total)
-			}
+			assert.NoError(t, err, "unexpected error")
+			assert.Len(t, results, tt.expectCount, "expected %d results", tt.expectCount)
+			assert.Equal(t, tt.expectTotal, total, "expected total=%d", tt.expectTotal)
 
 			for i, expectedID := range tt.expectIDs {
-				if i >= len(results) {
-					t.Fatalf("expected at least %d results, got %d", i+1, len(results))
-				}
-				if results[i]["id"] != float64(expectedID) {
-					t.Errorf("expected id=%d at index %d, got %v", expectedID, i, results[i]["id"])
-				}
+				assert.Greater(t, len(results), i, "expected at least %d results", i+1)
+				assert.Equal(t, float64(expectedID), results[i]["id"], "expected id=%d at index %d", expectedID, i)
 			}
 		})
 	}
@@ -456,23 +412,15 @@ func TestUpdate(t *testing.T) {
 			result, err := s.Update(tt.resource, tt.recordID, tt.updateData)
 
 			if tt.expectFound {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
+				assert.NoError(t, err, "unexpected error")
 
 				for key, expectedVal := range tt.expectFields {
-					if result[key] != expectedVal {
-						t.Errorf("expected %s=%v, got %v", key, expectedVal, result[key])
-					}
+					assert.Equal(t, expectedVal, result[key], "expected %s=%v", key, expectedVal)
 				}
 
-				if _, ok := result["updatedAt"]; !ok {
-					t.Errorf("expected updatedAt field to be set")
-				}
+				assert.NotNil(t, result["updatedAt"], "expected updatedAt field to be set")
 			} else {
-				if err == nil {
-					t.Errorf("expected error, but got nil")
-				}
+				assert.Error(t, err, "expected error")
 			}
 		})
 	}
@@ -577,23 +525,15 @@ func TestPatch(t *testing.T) {
 			result, err := s.Patch(tt.resource, tt.recordID, tt.patchData)
 
 			if tt.expectFound {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
+				assert.NoError(t, err, "unexpected error")
 
 				for key, expectedVal := range tt.expectFields {
-					if result[key] != expectedVal {
-						t.Errorf("expected %s=%v, got %v", key, expectedVal, result[key])
-					}
+					assert.Equal(t, expectedVal, result[key], "expected %s=%v", key, expectedVal)
 				}
 
-				if _, ok := result["updatedAt"]; !ok {
-					t.Errorf("expected updatedAt field to be set")
-				}
+				assert.NotNil(t, result["updatedAt"], "expected updatedAt field to be set")
 			} else {
-				if err == nil {
-					t.Errorf("expected error, but got nil")
-				}
+				assert.Error(t, err, "expected error")
 			}
 		})
 	}
@@ -652,19 +592,12 @@ func TestDelete(t *testing.T) {
 			err := s.Delete(tt.resource, tt.recordID)
 
 			if tt.expectSuccess {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
+				assert.NoError(t, err, "unexpected error")
 
-				// Verify record was actually deleted
 				remaining, _, _ := s.List(tt.resource, nil, 1, 0)
-				if len(remaining) != tt.expectRemaining {
-					t.Errorf("expected %d remaining records, got %d", tt.expectRemaining, len(remaining))
-				}
+				assert.Len(t, remaining, tt.expectRemaining, "expected %d remaining records", tt.expectRemaining)
 			} else {
-				if err == nil {
-					t.Errorf("expected error, but got nil")
-				}
+				assert.Error(t, err, "expected error")
 			}
 		})
 	}
@@ -676,13 +609,8 @@ func TestPersistence(t *testing.T) {
 		s, _ := NewWithFS("test.json", mock)
 
 		_, err := s.Create("users", store.Record{"name": "Alice"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if _, ok := mock.files["test.json"]; !ok {
-			t.Errorf("expected data to be persisted to file")
-		}
+		assert.NoError(t, err, "unexpected error")
+		assert.NotEmpty(t, mock.files["test.json"], "expected data to be persisted to file")
 	})
 
 	t.Run("persists data to filesystem on update", func(t *testing.T) {
@@ -700,20 +628,12 @@ func TestPersistence(t *testing.T) {
 
 		s, _ := NewWithFS("test.json", mock)
 		_, err := s.Update("users", "1", store.Record{"name": "Alice Smith"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 
-		// Verify the update was persisted
 		var persisted map[string][]store.Record
 		err = json.Unmarshal(mock.files["test.json"], &persisted)
-		if err != nil {
-			t.Fatalf("failed to unmarshal persisted data: %v", err)
-		}
-
-		if persisted["users"][0]["name"] != "Alice Smith" {
-			t.Errorf("expected persisted name=Alice Smith, got %v", persisted["users"][0]["name"])
-		}
+		assert.NoError(t, err, "failed to unmarshal persisted data")
+		assert.Equal(t, "Alice Smith", persisted["users"][0]["name"], "expected persisted name=Alice Smith")
 	})
 
 	t.Run("persists data to filesystem on delete", func(t *testing.T) {
@@ -735,19 +655,12 @@ func TestPersistence(t *testing.T) {
 
 		s, _ := NewWithFS("test.json", mock)
 		err := s.Delete("users", "1")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 
 		var persisted map[string][]store.Record
 		err = json.Unmarshal(mock.files["test.json"], &persisted)
-		if err != nil {
-			t.Fatalf("failed to unmarshal persisted data: %v", err)
-		}
-
-		if len(persisted["users"]) != 1 {
-			t.Errorf("expected 1 remaining record, got %d", len(persisted["users"]))
-		}
+		assert.NoError(t, err, "failed to unmarshal persisted data")
+		assert.Len(t, persisted["users"], 1, "expected 1 remaining record")
 	})
 
 	t.Run("skips persistence when file path is empty", func(t *testing.T) {
@@ -755,13 +668,8 @@ func TestPersistence(t *testing.T) {
 		s, _ := NewWithFS("", mock)
 
 		_, err := s.Create("users", store.Record{"name": "Alice"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if len(mock.files) > 0 {
-			t.Errorf("expected no file writes when path is empty")
-		}
+		assert.NoError(t, err, "unexpected error")
+		assert.Empty(t, mock.files, "expected no file writes when path is empty")
 	})
 }
 
@@ -771,27 +679,15 @@ func TestIDSequencing(t *testing.T) {
 		s, _ := NewWithFS("test.json", mock)
 
 		user, err := s.Create("users", store.Record{"name": "Alice"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 		post, err := s.Create("posts", store.Record{"title": "Hello"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 		user2, err := s.Create("users", store.Record{"name": "Bob"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 
-		if user["id"] != int64(1) {
-			t.Errorf("expected user id=1, got %v", user["id"])
-		}
-		if post["id"] != int64(1) {
-			t.Errorf("expected post id=1, got %v", post["id"])
-		}
-		if user2["id"] != int64(2) {
-			t.Errorf("expected user2 id=2, got %v", user2["id"])
-		}
+		assert.Equal(t, int64(1), user["id"], "expected user id=1")
+		assert.Equal(t, int64(1), post["id"], "expected post id=1")
+		assert.Equal(t, int64(2), user2["id"], "expected user2 id=2")
 	})
 
 	t.Run("resumes ID sequence from loaded data", func(t *testing.T) {
@@ -809,10 +705,7 @@ func TestIDSequencing(t *testing.T) {
 
 		s, _ := NewWithFS("test.json", mock)
 		newUser, _ := s.Create("users", store.Record{"name": "Bob"})
-
-		if newUser["id"] != int64(6) {
-			t.Errorf("expected new user id=6, got %v", newUser["id"])
-		}
+		assert.Equal(t, int64(6), newUser["id"], "expected new user id=6")
 	})
 }
 
@@ -823,25 +716,16 @@ func TestTimestamps(t *testing.T) {
 
 		before := time.Now().UTC()
 		result, err := s.Create("users", store.Record{"name": "Alice"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "unexpected error")
 		after := time.Now().UTC().Add(1 * time.Second)
 
 		createdAt, ok := result["createdAt"].(string)
-		if !ok {
-			t.Fatalf("expected createdAt to be a string")
-		}
+		assert.True(t, ok, "expected createdAt to be a string")
 
 		createdTime, err := time.Parse(time.RFC3339, createdAt)
-		if err != nil {
-			t.Fatalf("failed to parse createdAt: %v", err)
-		}
-
-		// RFC3339 has second precision, so just verify it's within a reasonable window
-		if createdTime.Before(before.Add(-1*time.Second)) || createdTime.After(after) {
-			t.Errorf("expected createdAt within range, got %v (before=%v, after=%v)", createdTime, before, after)
-		}
+		assert.NoError(t, err, "failed to parse createdAt")
+		assert.True(t, createdTime.After(before.Add(-1*time.Second)), "createdAt should be after before-1s")
+		assert.True(t, createdTime.Before(after), "createdAt should be before after")
 	})
 
 	t.Run("sets updatedAt on update", func(t *testing.T) {
@@ -865,19 +749,12 @@ func TestTimestamps(t *testing.T) {
 		after := time.Now().UTC().Add(1 * time.Second)
 
 		updatedAt, ok := result["updatedAt"].(string)
-		if !ok {
-			t.Fatalf("expected updatedAt to be a string")
-		}
+		assert.True(t, ok, "expected updatedAt to be a string")
 
 		updatedTime, err := time.Parse(time.RFC3339, updatedAt)
-		if err != nil {
-			t.Fatalf("failed to parse updatedAt: %v", err)
-		}
-
-		// RFC3339 has second precision, so just verify it's within a reasonable window
-		if updatedTime.Before(before.Add(-1*time.Second)) || updatedTime.After(after) {
-			t.Errorf("expected updatedAt within range, got %v (before=%v, after=%v)", updatedTime, before, after)
-		}
+		assert.NoError(t, err, "failed to parse updatedAt")
+		assert.True(t, updatedTime.After(before.Add(-1*time.Second)), "updatedAt should be after before-1s")
+		assert.True(t, updatedTime.Before(after), "updatedAt should be before after")
 	})
 
 	t.Run("sets updatedAt on patch", func(t *testing.T) {
@@ -898,8 +775,6 @@ func TestTimestamps(t *testing.T) {
 
 		result, _ := s.Patch("users", "1", store.Record{"name": "Alice Smith"})
 
-		if _, ok := result["updatedAt"]; !ok {
-			t.Errorf("expected updatedAt to be set")
-		}
+		assert.NotNil(t, result["updatedAt"], "expected updatedAt to be set")
 	})
 }
