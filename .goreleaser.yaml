@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: rumor
-    main: .
+    main: ./cmd/rumor/main.go
     binary: rumor
     env:
       - CGO_ENABLED=0
