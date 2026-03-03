@@ -1,6 +1,6 @@
 # rumor
 
-[![License](https://img.shields.io/github/license/jimschubert/rumor?color=blue)](./LICENSE)
+[![License](https://img.shields.io/github/license/jimschubert/rumor?a=a&color=blue)](./LICENSE)
 ![Go Version](https://img.shields.io/github/go-mod/go-version/jimschubert/rumor)
 
 Lightweight server (`rumor`) for serving mock data via gRPC and HTTP/JSON APIs; backed by JSON files for storage.
