@@ -201,7 +201,7 @@ func TestGet(t *testing.T) {
 		recordID     string
 		setupData    map[string][]store.Record
 		expectFound  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "gets existing record",
@@ -217,7 +217,7 @@ func TestGet(t *testing.T) {
 				},
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice",
 				"email": "alice@example.com",
@@ -268,19 +268,19 @@ func TestCreate(t *testing.T) {
 	tests := []struct {
 		name         string
 		resource     string
-		inputData    map[string]interface{}
+		inputData    map[string]any
 		expectError  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "creates new record",
 			resource: "users",
-			inputData: map[string]interface{}{
+			inputData: map[string]any{
 				"name":  "Alice",
 				"email": "alice@example.com",
 			},
 			expectError: false,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"name":  "Alice",
 				"email": "alice@example.com",
 			},
@@ -294,16 +294,16 @@ func TestCreate(t *testing.T) {
 		{
 			name:     "creates record with complex nested data",
 			resource: "posts",
-			inputData: map[string]interface{}{
+			inputData: map[string]any{
 				"title":  "Hello World",
 				"author": "Alice",
-				"tags": []interface{}{
+				"tags": []any{
 					"go",
 					"testing",
 				},
 			},
 			expectError: false,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"title":  "Hello World",
 				"author": "Alice",
 			},
@@ -351,16 +351,16 @@ func TestUpdate(t *testing.T) {
 		name         string
 		resource     string
 		recordID     string
-		updateData   map[string]interface{}
+		updateData   map[string]any
 		setupData    map[string][]store.Record
 		expectError  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "updates existing record",
 			resource: "users",
 			recordID: "1",
-			updateData: map[string]interface{}{
+			updateData: map[string]any{
 				"name":  "Alice Smith",
 				"email": "alice.smith@example.com",
 			},
@@ -374,7 +374,7 @@ func TestUpdate(t *testing.T) {
 				},
 			},
 			expectError: false,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice Smith",
 				"email": "alice.smith@example.com",
@@ -399,7 +399,7 @@ func TestUpdate(t *testing.T) {
 			name:     "returns error for non-existent record",
 			resource: "users",
 			recordID: "999",
-			updateData: map[string]interface{}{
+			updateData: map[string]any{
 				"name": "Ghost",
 			},
 			setupData:   map[string][]store.Record{},
@@ -458,16 +458,16 @@ func TestPatch(t *testing.T) {
 		name         string
 		resource     string
 		recordID     string
-		patchData    map[string]interface{}
+		patchData    map[string]any
 		setupData    map[string][]store.Record
 		expectError  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "patches single field",
 			resource: "users",
 			recordID: "1",
-			patchData: map[string]interface{}{
+			patchData: map[string]any{
 				"email": "newemail@example.com",
 			},
 			setupData: map[string][]store.Record{
@@ -480,7 +480,7 @@ func TestPatch(t *testing.T) {
 				},
 			},
 			expectError: false,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice",
 				"email": "newemail@example.com",
@@ -490,7 +490,7 @@ func TestPatch(t *testing.T) {
 			name:     "patches multiple fields",
 			resource: "users",
 			recordID: "1",
-			patchData: map[string]interface{}{
+			patchData: map[string]any{
 				"name":  "Alice Smith",
 				"email": "alice.smith@example.com",
 			},
@@ -504,7 +504,7 @@ func TestPatch(t *testing.T) {
 				},
 			},
 			expectError: false,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice Smith",
 				"email": "alice.smith@example.com",
@@ -529,7 +529,7 @@ func TestPatch(t *testing.T) {
 			name:     "returns error for non-existent record",
 			resource: "users",
 			recordID: "999",
-			patchData: map[string]interface{}{
+			patchData: map[string]any{
 				"name": "Ghost",
 			},
 			setupData:   map[string][]store.Record{},
@@ -705,7 +705,7 @@ func TestMultiResourceOperations(t *testing.T) {
 
 		user, err := srv.Create(context.Background(), &pb.CreateRequest{
 			Resource: "users",
-			Data: mkStruct(t, map[string]interface{}{
+			Data: mkStruct(t, map[string]any{
 				"name": "Alice",
 			}),
 		})
@@ -715,7 +715,7 @@ func TestMultiResourceOperations(t *testing.T) {
 
 		post, err := srv.Create(context.Background(), &pb.CreateRequest{
 			Resource: "posts",
-			Data: mkStruct(t, map[string]interface{}{
+			Data: mkStruct(t, map[string]any{
 				"title": "Hello World",
 			}),
 		})
@@ -756,7 +756,7 @@ func TestPersistenceWithMockFS(t *testing.T) {
 
 		_, err := srv.Create(context.Background(), &pb.CreateRequest{
 			Resource: "users",
-			Data: mkStruct(t, map[string]interface{}{
+			Data: mkStruct(t, map[string]any{
 				"name": "Alice",
 			}),
 		})
@@ -767,7 +767,7 @@ func TestPersistenceWithMockFS(t *testing.T) {
 }
 
 // mkStruct makes a proto buffer struct from a map
-func mkStruct(t *testing.T, m map[string]interface{}) *structpb.Struct {
+func mkStruct(t *testing.T, m map[string]any) *structpb.Struct {
 	t.Helper()
 	s, err := structpb.NewStruct(m)
 	if err != nil {

@@ -91,7 +91,7 @@ func TestCreate(t *testing.T) {
 		resource     string
 		data         store.Record
 		expectID     int64
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "creates record with sequential ID",
@@ -101,7 +101,7 @@ func TestCreate(t *testing.T) {
 				"email": "alice@example.com",
 			},
 			expectID: 1,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"name":  "Alice",
 				"email": "alice@example.com",
 			},
@@ -114,7 +114,7 @@ func TestCreate(t *testing.T) {
 				"body":  "This is a test post",
 			},
 			expectID: 1,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"title": "Hello World",
 				"body":  "This is a test post",
 			},
@@ -160,7 +160,7 @@ func TestGet(t *testing.T) {
 		recordID     string
 		initialData  map[string][]store.Record
 		expectFound  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "gets existing record",
@@ -175,7 +175,7 @@ func TestGet(t *testing.T) {
 				},
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":   float64(1),
 				"name": "Alice",
 			},
@@ -360,7 +360,7 @@ func TestUpdate(t *testing.T) {
 		recordID     string
 		updateData   store.Record
 		expectFound  bool
-		expectFields map[string]interface{}
+		expectFields map[string]any
 	}{
 		{
 			name:     "updates existing record",
@@ -371,7 +371,7 @@ func TestUpdate(t *testing.T) {
 				"email": "alice.smith@example.com",
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice Smith",
 				"email": "alice.smith@example.com",
@@ -385,7 +385,7 @@ func TestUpdate(t *testing.T) {
 				"name": "Bob",
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id": float64(1),
 			},
 		},
@@ -445,7 +445,7 @@ func TestPatch(t *testing.T) {
 		recordID      string
 		patchData     store.Record
 		expectFound   bool
-		expectFields  map[string]interface{}
+		expectFields  map[string]any
 		shouldNotHave []string
 	}{
 		{
@@ -456,7 +456,7 @@ func TestPatch(t *testing.T) {
 				"age": 31,
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice",
 				"email": "alice@example.com",
@@ -472,7 +472,7 @@ func TestPatch(t *testing.T) {
 				"email": "asmith@example.com",
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id":    float64(1),
 				"name":  "Alice Smith",
 				"email": "asmith@example.com",
@@ -486,7 +486,7 @@ func TestPatch(t *testing.T) {
 				"id": float64(999),
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"id": float64(1),
 			},
 		},
@@ -498,7 +498,7 @@ func TestPatch(t *testing.T) {
 				"createdAt": "2026-01-01T00:00:00Z",
 			},
 			expectFound: true,
-			expectFields: map[string]interface{}{
+			expectFields: map[string]any{
 				"createdAt": "2026-03-01T00:00:00Z",
 			},
 		},
