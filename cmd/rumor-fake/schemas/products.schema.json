@@ -1,0 +1,25 @@
+{
+  "fields": {
+    "product_name": {
+      "type": "word"
+    },
+    "description": {
+      "type": "paragraph"
+    },
+    "price": {
+      "type": "float"
+    },
+    "quantity": {
+      "type": "int"
+    },
+    "sku": {
+      "type": "uuid"
+    },
+    "in_stock": {
+      "type": "bool"
+    },
+    "category": {
+      "type": "word"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "fields": {
+    "street_address": {
+      "type": "address"
+    },
+    "city": {
+      "type": "city"
+    },
+    "state": {
+      "type": "state"
+    },
+    "zipcode": {
+      "type": "zipcode"
+    },
+    "country": {
+      "type": "country"
+    },
+    "latitude": {
+      "type": "latitude"
+    },
+    "longitude": {
+      "type": "longitude"
+    }
+  }
+}
+

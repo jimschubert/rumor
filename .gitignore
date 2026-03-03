@@ -1,8 +1,7 @@
-rumor
-db.json
-dist/
-# Don't commit generated code for server, must run make gen locally for those files
-gen/
+/rumor
+/rumor-fake
+/*.json
+/dist/
 .github/CHANGELOG.md
 .github/copilot-instructions.md
 

@@ -10,11 +10,29 @@ builds:
     binary: rumor
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X main.projectName={{ .ProjectName }}
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{ .Date }}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+  - id: rumor-fake
+    main: ./cmd/rumor-fake/main.go
+    binary: rumor-fake
+    env:
+      - CGO_ENABLED=0
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
       - -s -w
-      - -X main.projectName={{ .ProjectName }}
+      - -X main.projectName=rumor-fake
       - -X main.version={{.Version}}
       - -X main.commit={{.ShortCommit}}
       - -X main.date={{ .Date }}

@@ -1,0 +1,29 @@
+{
+  "fields": {
+    "email": {
+      "type": "email"
+    },
+    "first_name": {
+      "type": "first_name"
+    },
+    "last_name": {
+      "type": "last_name"
+    },
+    "phone": {
+      "type": "phone"
+    },
+    "company": {
+      "type": "company"
+    },
+    "job_title": {
+      "type": "job_title"
+    },
+    "country": {
+      "type": "country"
+    },
+    "status": {
+      "type": "string",
+      "value": "active"
+    }
+  }
+}
