@@ -5,7 +5,7 @@
 
 Lightweight server (`rumor`) for serving mock data via gRPC and HTTP/JSON APIs; backed by JSON files for storage.
 
-Use `rumor-fake` to generate fake data from JSON-based schema (currently this a custom schema format, but I intend to move to JSON Schema output).
+Use `rumor-fake` to generate fake data from JSON-based schema (supports both simplified schema and standard JSON Schema formats).
 
 ## Install
 
@@ -99,10 +99,9 @@ Example:
 
 ## Schema Definition
 
->[!NOTE]
-> This is not standard `JSON Schema` - it's a simplified custom format.
+Both simplified and standard JSON Schema formats are supported with automatic detection.
 
-Schemas define field types for generating fake data. Example `users.schema.json`:
+**Simplified format** (`users.schema.json`):
 
 ```json
 {
@@ -116,7 +115,23 @@ Schemas define field types for generating fake data. Example `users.schema.json`
 }
 ```
 
-Fields with `value` are static across all records. See [internal/faker/doc.go](internal/faker/doc.go) for more details.
+**JSON Schema format**:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "email": {"type": "string", "format": "email"},
+    "first_name": {"type": "string", "format": "first_name"},
+    "last_name": {"type": "string", "format": "last_name"},
+    "company": {"type": "string", "format": "company"},
+    "status": {"type": "string", "const": "active"}
+  }
+}
+```
+
+See [internal/faker/doc.go](internal/faker/doc.go) for supported field types and formats.
 
 ## Demo
 

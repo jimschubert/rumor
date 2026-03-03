@@ -4,8 +4,9 @@ go 1.26
 
 require (
 	github.com/alecthomas/kong v1.14.0
-	github.com/brianvoe/gofakeit/v7 v7.14.0
+	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171
 	google.golang.org/grpc v1.79.1

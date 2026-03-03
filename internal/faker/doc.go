@@ -3,18 +3,32 @@
 // # Overview
 //
 // The faker package provides a flexible data generation library built on top of gofakeit.
-// It allows users to define data structures using schemas files and generate realistic records
+// It allows users to define data structures using schema files and generate realistic records
 // with fields like emails, names, addresses, and more.
 //
-// # Schema Format
+// # Schema Formats
 //
-// Schemas are JSON files defining field types. Each field can optionally have a static value:
+// Two schema formats are supported with automatic detection:
+//
+// Simplified format:
 //
 //	{
 //	  "fields": {
 //	    "email": {"type": "email"},
 //	    "name": {"type": "name"},
 //	    "status": {"type": "string", "value": "active"}
+//	  }
+//	}
+//
+// Standard JSON Schema format:
+//
+//	{
+//	  "$schema": "http://json-schema.org/draft-07/schema#",
+//	  "type": "object",
+//	  "properties": {
+//	    "email": {"type": "string", "format": "email"},
+//	    "name": {"type": "string", "format": "name"},
+//	    "status": {"type": "string", "const": "active"}
 //	  }
 //	}
 //

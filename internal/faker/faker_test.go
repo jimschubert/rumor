@@ -300,3 +300,258 @@ func TestGenerateRecordMarshalJSON(t *testing.T) {
 	assert.NotNil(t, unmarshaled["email"])
 	assert.NotNil(t, unmarshaled["count"])
 }
+
+func TestLoadJSONSchema_Basic(t *testing.T) {
+	schemaJSON := `{
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "object",
+		"properties": {
+			"email": {
+				"type": "string",
+				"format": "email"
+			},
+			"age": {
+				"type": "integer"
+			},
+			"score": {
+				"type": "number"
+			},
+			"active": {
+				"type": "boolean"
+			}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	require.NotNil(t, schema)
+	assert.Equal(t, 4, len(schema.Fields))
+	assert.Equal(t, TypeEmail, schema.Fields["email"].Type)
+	assert.Equal(t, TypeInt, schema.Fields["age"].Type)
+	assert.Equal(t, TypeFloat, schema.Fields["score"].Type)
+	assert.Equal(t, TypeBool, schema.Fields["active"].Type)
+}
+
+func TestLoadJSONSchema_Formats(t *testing.T) {
+	schemaJSON := `{
+		"type": "object",
+		"properties": {
+			"id": {"type": "string", "format": "uuid"},
+			"created_at": {"type": "string", "format": "date-time"},
+			"birth_date": {"type": "string", "format": "date"},
+			"website": {"type": "string", "format": "uri"},
+			"ip": {"type": "string", "format": "ipv4"},
+			"ipv6": {"type": "string", "format": "ipv6"}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	assert.Equal(t, TypeUUID, schema.Fields["id"].Type)
+	assert.Equal(t, TypeDatetime, schema.Fields["created_at"].Type)
+	assert.Equal(t, TypeDate, schema.Fields["birth_date"].Type)
+	assert.Equal(t, TypeURL, schema.Fields["website"].Type)
+	assert.Equal(t, TypeIPv4, schema.Fields["ip"].Type)
+	assert.Equal(t, TypeIPv6, schema.Fields["ipv6"].Type)
+}
+
+func TestLoadJSONSchema_CustomFormats(t *testing.T) {
+	schemaJSON := `{
+		"type": "object",
+		"properties": {
+			"full_name": {"type": "string", "format": "name"},
+			"first_name": {"type": "string", "format": "first_name"},
+			"last_name": {"type": "string", "format": "last_name"},
+			"phone": {"type": "string", "format": "phone"},
+			"address": {"type": "string", "format": "address"},
+			"city": {"type": "string", "format": "city"},
+			"company": {"type": "string", "format": "company"},
+			"title": {"type": "string", "format": "job_title"}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	assert.Equal(t, TypeName, schema.Fields["full_name"].Type)
+	assert.Equal(t, TypeFirstName, schema.Fields["first_name"].Type)
+	assert.Equal(t, TypeLastName, schema.Fields["last_name"].Type)
+	assert.Equal(t, TypePhone, schema.Fields["phone"].Type)
+	assert.Equal(t, TypeAddress, schema.Fields["address"].Type)
+	assert.Equal(t, TypeCity, schema.Fields["city"].Type)
+	assert.Equal(t, TypeCompany, schema.Fields["company"].Type)
+	assert.Equal(t, TypeJobTitle, schema.Fields["title"].Type)
+}
+
+func TestLoadJSONSchema_ConstValues(t *testing.T) {
+	schemaJSON := `{
+		"type": "object",
+		"properties": {
+			"version": {
+				"type": "string",
+				"const": "1.0.0"
+			},
+			"environment": {
+				"type": "string",
+				"const": "production"
+			},
+			"max_retries": {
+				"type": "integer",
+				"const": 3
+			}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	assert.Equal(t, "1.0.0", schema.Fields["version"].Value)
+	assert.Equal(t, "production", schema.Fields["environment"].Value)
+	assert.Equal(t, float64(3), schema.Fields["max_retries"].Value)
+}
+
+func TestLoadJSONSchema_DefaultValues(t *testing.T) {
+	schemaJSON := `{
+		"type": "object",
+		"properties": {
+			"status": {
+				"type": "string",
+				"default": "pending"
+			},
+			"priority": {
+				"type": "integer",
+				"default": 5
+			}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	assert.Equal(t, "pending", schema.Fields["status"].Value)
+	assert.Equal(t, float64(5), schema.Fields["priority"].Value)
+}
+
+func TestLoadJSONSchema_WithoutSchema(t *testing.T) {
+	schemaJSON := `{
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(schema.Fields))
+	assert.Equal(t, TypeString, schema.Fields["name"].Type)
+}
+
+func TestLoadJSONSchema_GenerateRecords(t *testing.T) {
+	schemaJSON := `{
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "object",
+		"properties": {
+			"email": {"type": "string", "format": "email"},
+			"name": {"type": "string", "format": "name"},
+			"age": {"type": "integer"},
+			"active": {"type": "boolean"},
+			"status": {"type": "string", "const": "verified"}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(schemaJSON))
+	require.NoError(t, err)
+
+	record := GenerateRecord(schema)
+	assert.Len(t, record, 5)
+	assert.NotEmpty(t, record["email"])
+	assert.NotEmpty(t, record["name"])
+	assert.NotEmpty(t, record["age"])
+	assert.NotNil(t, record["active"])
+	assert.Equal(t, "verified", record["status"])
+
+	assert.IsType(t, "", record["email"])
+	assert.IsType(t, "", record["name"])
+	assert.IsType(t, int64(0), record["age"])
+	assert.IsType(t, false, record["active"])
+	assert.IsType(t, "", record["status"])
+}
+
+func TestLoadJSONSchema_Invalid(t *testing.T) {
+	tests := []struct {
+		name   string
+		schema string
+	}{
+		{
+			name:   "empty properties",
+			schema: `{"type": "object", "properties": {}}`,
+		},
+		{
+			name:   "invalid schema",
+			schema: `{"$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "properties": {}}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := LoadSchema(bytes.NewBufferString(tt.schema))
+			assert.Error(t, err)
+		})
+	}
+}
+
+func TestIsJSONSchema(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]any
+		expected bool
+	}{
+		{
+			name:     "has $schema",
+			input:    map[string]any{"$schema": "http://json-schema.org/draft-07/schema#"},
+			expected: true,
+		},
+		{
+			name:     "has type object and properties",
+			input:    map[string]any{"type": "object", "properties": map[string]any{}},
+			expected: true,
+		},
+		{
+			name:     "simplified schema with fields",
+			input:    map[string]any{"fields": map[string]any{}},
+			expected: false,
+		},
+		{
+			name:     "has type but no properties",
+			input:    map[string]any{"type": "object"},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isJSONSchema(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestBackwardCompatibility(t *testing.T) {
+	simplifiedFormat := `{
+		"fields": {
+			"email": {"type": "email"},
+			"name": {"type": "name"},
+			"age": {"type": "int"}
+		}
+	}`
+
+	schema, err := LoadSchema(bytes.NewBufferString(simplifiedFormat))
+	require.NoError(t, err)
+	assert.Equal(t, 3, len(schema.Fields))
+	assert.Equal(t, TypeEmail, schema.Fields["email"].Type)
+	assert.Equal(t, TypeName, schema.Fields["name"].Type)
+	assert.Equal(t, TypeInt, schema.Fields["age"].Type)
+
+	record := GenerateRecord(schema)
+	assert.Len(t, record, 3)
+	assert.NotEmpty(t, record["email"])
+	assert.NotEmpty(t, record["name"])
+	assert.NotEmpty(t, record["age"])
+}
