@@ -3,7 +3,7 @@ module github.com/jimschubert/rumor
 go 1.26
 
 require (
-	github.com/alecthomas/kong v1.15.0
+	github.com/alecthomas/kong v1.16.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
